@@ -1,0 +1,113 @@
+# Build artifacts
+waf-engine
+waf
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+*.out
+coverage.html
+coverage.txt
+coverage.xml
+
+# Logs
+waf.log
+*.log
+aegis.log
+logs/
+
+# Generated dashboard
+dashboard/dist/
+dashboard/node_modules/
+dashboard/.vite/
+
+# Generated code
+*.pb.go
+*.gen.go
+
+# Local config
+.env
+.env.local
+config.local.yaml
+config.local.yml
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Runtime data
+/var/
+/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets
+secrets/
+*.pem
+*.key
+certs/
+
+# Backup files
+*.bak
+*.orig
+*.rej
+
+# Coverage reports
+*.cover
+.coverage
+
+# Go workspace
+go.work
+go.work.sum
+
+# Tools
+.golangci.yml.local
+.tool-versions
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Aegis local runtime (don't commit)
+/.aegis-*
+!/aegis-bin
+*.log
+
+# Build artifacts
+dashboard/dist/
+dashboard/node_modules/
+*.exe
+*.dll
+*.so
+*.dylib
+waf-engine
+waf-engine.exe
+waf
+!aegis-bin
+
+# Local runtime
+.aegis-*
+waf.log
+*.log
+dump.rdb
+
+# Backups
+*.bak
+*.orig
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Root node_modules (dashboard deps live here for some reason)
+node_modules/

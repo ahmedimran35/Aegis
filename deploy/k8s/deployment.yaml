@@ -1,0 +1,170 @@
+---
+# Plain k8s manifests (no Helm) — same security defaults as the chart.
+# Free, no commercial operators required.
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aegis
+  labels:
+    app: aegis
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aegis
+  template:
+    metadata:
+      labels:
+        app: aegis
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: aegis
+          image: ghcr.io/ahmedimran35/aegis-waf:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: AEGIS_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: aegis-secrets
+                  key: database-url
+            - name: AEGIS_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: aegis-secrets
+                  key: redis-url
+            - name: AEGIS_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: aegis-secrets
+                  key: jwt-secret
+            - name: AEGIS_TOTP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aegis-secrets
+                  key: totp-key
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aegis
+  labels:
+    app: aegis
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: aegis
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: aegis
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aegis
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: aegis
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: aegis
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: aegis
+spec:
+  podSelector:
+    matchLabels:
+      app: aegis
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - ports:
+        - port: 8080
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5432
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+        - port: 443
+          protocol: TCP
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aegis-secrets
+type: Opaque
+stringData:
+  database-url: "postgres://aegis:CHANGE_ME@postgres:5432/aegis?sslmode=disable"
+  redis-url: "redis://redis:6379/0"
+  jwt-secret: "CHANGE_ME_AT_LEAST_32_CHARS_OF_RANDOMNESS_HERE"
+  totp-key: "CHANGE_ME_TOTP_KEY_BASE64"

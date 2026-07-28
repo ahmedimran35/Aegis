@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aegis Dashboard</title>
+    <!-- P-FIX (L-5): removed Google Fonts CDN link. The previous
+         <link rel="stylesheet" href="https://fonts.googleapis.com/...">
+         caused the dashboard to fetch fonts from a third party on every
+         page load (privacy leak + integrity / SRI requirement + supply
+         chain risk if fonts.googleapis.com is compromised). The CSS
+         already declares system-font fallbacks (DM Sans → ui-sans-serif,
+         JetBrains Mono → ui-monospace) so visual fidelity is preserved
+         with native fonts on every modern OS. -->
+    <!-- P-FIX: removed the redundant CSP <meta> tag. The server
+         already sets a strict Content-Security-Policy via the response
+         header. The browser combines multiple CSPs with the most
+         restrictive intersection — having both a meta tag and an HTTP
+         header was making `style-src` stricter than necessary and
+         breaking the bundled CSS. (Also: `frame-ancestors` is silently
+         ignored when delivered via a <meta> element — this is a known
+         browser limitation. The HTTP header is the only place where
+         `frame-ancestors` takes effect.) -->
+    <!-- (P-FREE-recovery removed: the inline version-check script used
+         to call location.reload(true) on build-hash mismatch. That caused
+         an infinite reload blink whenever the page hash (Vite embed)
+         and the WAF hash (ldflags inject) drifted apart, which happens
+         on every WAF rebuild. Removed — the WAF now keeps them in sync
+         by being built with the dashboard's exact hash, and dashboard
+         cache-busting is handled by Vite's content-hashed filenames. -->
+    <script nonce="__CSP_NONCE__">
+      // Reserved for future server-injected nonce-bearing scripts.
+      // Intentionally empty so the strict CSP nonce mechanism stays in
+      // place without any code that could cause a reload loop.
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

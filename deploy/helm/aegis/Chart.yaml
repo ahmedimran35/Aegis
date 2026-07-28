@@ -1,0 +1,13 @@
+apiVersion: v2
+name: aegis
+description: Aegis WAF — self-hosted, AI-free, OSS-only deployment
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+icon: https://raw.githubusercontent.com/ahmedimran35/Aegis-Waf/main/dashboard/public/favicon.svg
+keywords: [waf, security, owasp, crs, threat-feed]
+home: https://github.com/ahmedimran35/Aegis-Waf
+sources:
+  - https://github.com/ahmedimran35/Aegis-Waf
+maintainers:
+  - name: Aegis Maintainers

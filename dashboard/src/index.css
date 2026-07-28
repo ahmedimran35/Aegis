@@ -1,0 +1,314 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background-color: #FAF8F4;
+    color: #1C1F26;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #FAF8F4;
+  }
+
+  /* Tabular figures by default for numeric stability */
+  .font-mono, code, kbd {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: rgba(74, 107, 71, 0.18);
+    color: #1C1F26;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #D4CDB8;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #B8B19A;
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+
+  /* Thin scrollbar for log/feed views */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #E8E3D6;
+    border-radius: 2px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #D4CDB8;
+  }
+}
+
+@layer components {
+  /* Card surfaces */
+  .card {
+    @apply bg-white border border-ivory-300 rounded-lg;
+  }
+  .card-elevated {
+    @apply bg-white border border-ivory-300 rounded-lg shadow-[0_1px_0_rgba(28,31,38,0.04)];
+  }
+  .card-hover {
+    @apply card transition-colors duration-150 hover:border-ivory-400 hover:bg-ivory-50/50;
+  }
+
+  /* Stat row (dense single-line) */
+  .stat-row {
+    @apply flex items-center gap-3 px-3 py-2 border-b border-ivory-200 last:border-b-0;
+  }
+
+  /* Section header with caps label */
+  .section-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-400;
+  }
+  .stat-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-400;
+  }
+  .stat-number {
+    @apply font-mono text-xl font-semibold tabular-nums text-ink-700 tracking-tight;
+  }
+  .stat-number-lg {
+    @apply font-mono text-2xl font-semibold tabular-nums text-ink-700 tracking-tight;
+  }
+
+  /* Data cells */
+  .data-cell {
+    @apply font-mono text-[13px] text-ink-600;
+  }
+
+  /* Severity left-border accent on table rows */
+  .sev-benign { @apply border-l-2 border-l-severity-benign; }
+  .sev-suspicious { @apply border-l-2 border-l-severity-suspicious; }
+  .sev-malicious { @apply border-l-2 border-l-severity-malicious; }
+  .sev-info { @apply border-l-2 border-l-severity-info; }
+  .sev-warn { @apply border-l-2 border-l-severity-warn; }
+  .sev-crit { @apply border-l-2 border-l-severity-crit; }
+  .sev-ok { @apply border-l-2 border-l-severity-ok; }
+
+  /* Pills */
+  .pill {
+    @apply inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded;
+  }
+  .pill-benign { @apply pill bg-forest-50 text-forest-600; }
+  .pill-suspicious { @apply pill bg-burnt-50 text-burnt-500; }
+  .pill-malicious { @apply pill bg-brick-50 text-brick-500; }
+  .pill-info { @apply pill bg-teal-50 text-teal-500; }
+  .pill-muted { @apply pill bg-ivory-200 text-ink-500; }
+  .pill-ok { @apply pill bg-forest-50 text-forest-600; }
+  .pill-warn { @apply pill bg-burnt-50 text-burnt-500; }
+  .pill-crit { @apply pill bg-brick-50 text-brick-500; }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-white
+           bg-forest-500 rounded-md hover:bg-forest-600 active:bg-forest-700
+           transition-colors duration-150 focus:outline-none focus:ring-2
+           focus:ring-forest-500/30 focus:ring-offset-1 focus:ring-offset-ivory-100;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-ink-600
+           bg-white border border-ivory-300 rounded-md hover:bg-ivory-100 hover:border-ivory-400
+           transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-forest-500/20;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-2.5 py-1.5 text-[13px] font-medium text-ink-500
+           rounded-md hover:bg-ivory-100 hover:text-ink-700 transition-colors duration-150;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-white
+           bg-brick-400 rounded-md hover:bg-brick-500 active:bg-brick-600
+           transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brick-400/30;
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply w-full px-2.5 py-1.5 text-[13px] bg-white border border-ivory-300 rounded-md
+           text-ink-700 placeholder:text-ink-500
+           focus:outline-none focus:ring-2 focus:ring-forest-500/20 focus:border-forest-400
+           transition-colors duration-150;
+  }
+  .input-mono {
+    @apply input-field font-mono;
+  }
+
+  /* Tables */
+  .table-header {
+    @apply px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.08em]
+           text-ink-400 border-b border-ivory-300 bg-ivory-50/60;
+  }
+  .table-cell {
+    @apply px-3 py-1.5 text-[13px] text-ink-600 border-b border-ivory-200;
+  }
+  .table-row {
+    @apply transition-colors duration-100 hover:bg-ivory-100/60;
+  }
+
+  /* Sidebar nav */
+  .nav-item {
+    @apply flex items-center gap-2.5 px-2.5 py-1.5 text-[13px] font-medium text-ink-500
+           rounded-md hover:bg-ivory-200/70 hover:text-ink-700
+           transition-colors duration-100 cursor-pointer select-none;
+  }
+  .nav-item-active {
+    @apply nav-item bg-ivory-200 text-ink-700 relative;
+  }
+  .nav-item-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    background: #4A6B47;
+    border-radius: 0 2px 2px 0;
+  }
+  .nav-section-label {
+    @apply px-2.5 mt-4 mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-ink-500;
+  }
+  .nav-kbd {
+    @apply ml-auto text-[10px] font-mono text-ink-500 tabular-nums;
+  }
+
+  /* Breadcrumb path */
+  .path-segment {
+    @apply text-ink-400 hover:text-ink-600 cursor-pointer transition-colors;
+  }
+  .path-segment-active {
+    @apply text-ink-700 font-medium;
+  }
+
+  /* WS connection dot */
+  .ws-dot {
+    @apply inline-block w-1.5 h-1.5 rounded-full;
+  }
+  .ws-dot-on { @apply ws-dot bg-forest-500 animate-pulse-dot; }
+  .ws-dot-off { @apply ws-dot bg-ink-300; }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    @apply bg-ivory-200 rounded relative overflow-hidden;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+
+  /* Charts — Recharts overrides */
+  .recharts-cartesian-grid line {
+    stroke: #E8E3D6;
+    stroke-dasharray: 2 4;
+  }
+  .recharts-cartesian-axis line,
+  .recharts-cartesian-axis-tick-line {
+    stroke: #D4CDB8;
+  }
+  .recharts-cartesian-axis-tick-value {
+    fill: #6B7280;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .recharts-tooltip-wrapper {
+    outline: none;
+  }
+  .recharts-default-tooltip {
+    background: #1C1F26 !important;
+    border: 1px solid #2E3645 !important;
+    border-radius: 6px !important;
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    color: #E5E5E3 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  }
+  .recharts-tooltip-label {
+    color: #8E8770 !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* Mobile sidebar */
+  @media (max-width: 767px) {
+    .mobile-sidebar {
+      transform: translateX(-100%) !important;
+    }
+    .mobile-sidebar[data-open="true"] {
+      transform: translateX(0) !important;
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  .uppercase-tight {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .border-sev-benign { border-left-color: #4A6B47; }
+  .border-sev-suspicious { border-left-color: #B47A1E; }
+  .border-sev-malicious { border-left-color: #B8323C; }
+  .border-sev-info { border-left-color: #2F6F87; }
+}
+
+/* HIGH-7: prefers-reduced-motion — disable non-essential animations for
+   users with vestibular disorders or motion sensitivity. Critical for
+   accessibility compliance (WCAG 2.3.3 AAA).
+
+   Two-layered enforcement:
+   1. The media query below zeroes out animation + transition durations.
+   2. Reduced-motion users also get the static UI (no hover transforms,
+      no animate-pulse-dot, no section-stagger reveal). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .section-stagger > *,
+  .animate-fade-in,
+  .animate-pulse-dot,
+  .animate-pulse {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

@@ -1,0 +1,31 @@
+# P-FIX (M-30): prevents secrets and dev artifacts from leaking into the
+# build context image layers, and keeps the build cache small.
+dashboard/node_modules
+dashboard/dist
+dashboard/.next
+dashboard/.cache
+waf.log
+*.log
+waf-engine
+.git
+.gitignore
+.github
+.idea
+.vscode
+.claude
+*.md
+README.md
+CLAUDE.md
+docs/
+config.yaml
+config.local.yaml
+.env
+.env.*
+*.sqlite
+*.db
+node_modules/
+__pycache__/
+*_test.go
+**/*_test.go
+.sbom/
+sbom.spdx.json

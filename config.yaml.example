@@ -1,0 +1,84 @@
+server:
+  listen: ":8080"
+  # Add your server's public URL(s) for CORS
+  cors_origins:
+    - "http://localhost:8080"
+upstream:
+  url: "http://localhost:3000"
+ai:
+  provider: "openrouter"  # nim, ollama, openrouter, auto
+  nim:
+    api_key: ""
+    model: "meta/llama-3.1-8b-instruct"
+    base_url: "https://integrate.api.nvidia.com/v1"
+    timeout: "30s"
+  ollama:
+    url: "http://localhost:11434"
+    model: "llama3:8b"
+    timeout: "5s"
+  openrouter:
+    api_key: ""  # Get from openrouter.ai/keys
+    model: "openrouter/auto"
+    base_url: "https://openrouter.ai/api/v1"
+    timeout: "30s"
+  failover:
+    threshold: 0.9
+    window: "5m"
+rate_limit:
+  default: "100/min"
+redis:
+  url: "redis://:CHANGE_ME@localhost:6379"
+database:
+  url: "postgres://aegis:CHANGE_ME@localhost:5432/aegis?sslmode=require"
+logging:
+  batch_size: 100
+  flush_interval: "1s"
+auth:
+  jwt_secret: "CHANGE_ME_GENERATE_A_32_CHAR_SECRET_KEY"
+bot_detection:
+  mode: "log"
+alerts:
+  webhook_url: ""
+  min_severity: "medium"
+tls:
+  enabled: false
+  domains: []
+  email: ""
+  cache_dir: "/var/lib/aegis/certs"
+  http_listen: ":80"
+allowlist:
+  enabled: false
+session:
+  enabled: true
+  cookie_name: "aegis_session"
+  ttl: "24h"
+geoip:
+  enabled: false
+  db_path: "/var/lib/aegis/GeoLite2-Country.mmdb"
+  blocked: []
+  allowed: []
+ddos:
+  max_concurrent_conns: 1000
+  max_conns_per_ip: 50
+  max_new_conns_per_second: 100
+  max_reqs_per_conn: 1000
+siem:
+  enabled: false
+  type: "syslog"
+  syslog_addr: "localhost:514"
+  file_path: "/var/log/aegis/siem.json"
+  format: "json"
+  min_severity: "medium"
+honeypot:
+  enabled: true
+  paths:
+    - "/admin"
+    - "/wp-login.php"
+    - "/.env"
+    - "/phpmyadmin"
+    - "/xmlrpc.php"
+    - "/wp-admin"
+    - "/administrator"
+    - "/.git/config"
+    - "/server-status"
+    - "/actuator"

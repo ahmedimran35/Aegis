@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS asm_findings;
+DROP TABLE IF EXISTS credential_stuffing_events;
+DROP TABLE IF EXISTS openapi_schemas;
+DROP TABLE IF EXISTS upload_scans;
+DROP TABLE IF EXISTS llm_protection_rules;
+DROP TABLE IF EXISTS browser_challenge;
+DROP TABLE IF EXISTS endpoint_anomaly_events;
+DROP TABLE IF EXISTS endpoint_anomaly;
+DROP TABLE IF EXISTS cve_feed;
+DROP TABLE IF EXISTS jwt_allowlist;

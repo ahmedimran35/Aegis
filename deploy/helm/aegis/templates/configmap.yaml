@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aegis.fullname" . }}-config
+  labels:
+    {{- include "aegis.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    server:
+      listen: ":8080"
+    upstream:
+      url: "http://upstream:3000"
+    threat_feed:
+      enabled: {{ .Values.config.threat_feed.enabled }}
+      auto_block: {{ .Values.config.threat_feed.auto_block }}
+    ws_guard:
+      enabled: {{ .Values.config.ws_guard.enabled }}
+      max_message_bytes: {{ .Values.config.ws_guard.max_message_bytes }}
+      max_messages_per_min: {{ .Values.config.ws_guard.max_messages_per_min }}
+      max_connections_per_ip: {{ .Values.config.ws_guard.max_connections_per_ip }}
+    crs_update:
+      enabled: {{ .Values.config.crs_update.enabled }}
+      interval: "{{ .Values.config.crs_update.interval }}"
+      github_ref: "{{ .Values.config.crs_update.github_ref }}"
+    anomaly_stats:
+      enabled: {{ .Values.config.anomaly_stats.enabled }}
+      entropy_threshold: {{ .Values.config.anomaly_stats.entropy_threshold }}
+      request_rate_zscore: {{ .Values.config.anomaly_stats.request_rate_zscore }}
+    logging:
+      batch_size: 100
+      flush_interval: "1s"

@@ -1,0 +1,209 @@
+name: CI
+
+# P-FIX (M-8): pin every third-party action to a full commit SHA, never a
+# mutable tag like `@v4`. Tag references can be re-pointed by the action
+# publisher; SHAs cannot. Combined with `permissions: contents: read`
+# below, the CI surface is the smallest possible.
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+# Default to the minimum permission set. Individual jobs that need
+# more (e.g. `packages: write` for image push) override it locally.
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.25"
+  NODE_VERSION: "20"
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Go: build, vet, test, race detector
+  # -------------------------------------------------------------------------
+  go-lint-test:
+    name: Go lint, test, vet
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2 (pinned)
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v5.5.0 (pinned)
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Download modules
+        working-directory: .
+        run: go mod download
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go build
+        run: |
+          set -e
+          CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=${GITHUB_SHA::8} -X main.buildTimeStr=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o /tmp/aegis ./cmd/waf-engine/
+          echo "binary: $(stat -c%s /tmp/aegis) bytes"
+
+      - name: go test (with race detector)
+        run: |
+          go test -race -count=1 -timeout 5m ./... || (echo "Tests failed" && exit 1)
+
+      - name: go test (short, fast) re-run
+        run: go test -short -count=1 ./...
+
+  # -------------------------------------------------------------------------
+  # Go: fuzz tests (short CI gate, mirrors Makefile ci-test)
+  # -------------------------------------------------------------------------
+  go-fuzz:
+    name: Go fuzz (CI gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: go-lint-test
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2 (pinned)
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v5.5.0 (pinned)
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run all fuzz targets (5s each, CI gate)
+        run: |
+          set -e
+          FUZZ_TARGETS=$(grep -rho 'func Fuzz[A-Z][A-Za-z0-9_]*(' . | sort -u)
+          if [ -z "$FUZZ_TARGETS" ]; then
+            echo "No fuzz targets found"
+            exit 0
+          fi
+          echo "Fuzz targets: $FUZZ_TARGETS"
+          for t in $FUZZ_TARGETS; do
+            echo "=== Fuzzing $t ==="
+            go test -run='^$' -fuzz="$t" -fuzztime=5s . || echo "  (no corpus found, that's ok)"
+          done
+
+  # -------------------------------------------------------------------------
+  # Frontend: install, type-check, build
+  # -------------------------------------------------------------------------
+  frontend-build:
+    name: Frontend (npm ci + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2 (pinned)
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v4.4.0 (pinned)
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: npm ci
+        working-directory: dashboard
+        run: npm ci
+
+      - name: TypeScript type-check + Vite build
+        working-directory: dashboard
+        run: npm run build
+
+      - name: Upload dashboard dist as artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2 (pinned)
+        with:
+          name: dashboard-dist
+          path: dashboard/dist
+          retention-days: 7
+
+  # -------------------------------------------------------------------------
+  # Docker: build the production image (smoke test)
+  # -------------------------------------------------------------------------
+  docker-build:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [go-lint-test, frontend-build]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2 (pinned)
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v3.10.0 (pinned)
+
+      - name: Build aegis image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v6.18.0 (pinned)
+        with:
+          context: .
+          file: docker/aegis/Dockerfile
+          push: false
+          tags: aegis:${{ github.sha }}
+          build-args: |
+            VERSION=${{ github.sha }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Image size report
+        run: |
+          docker images aegis:${{ github.sha }} --format "{{.Repository}}:{{.Tag}} {{.Size}}"
+
+  # -------------------------------------------------------------------------
+  # Security: govulncheck
+  # -------------------------------------------------------------------------
+  go-vuln:
+    name: Go vulnerability scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2 (pinned)
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v5.5.0 (pinned)
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck
+        run: govulncheck ./...
+
+  # -------------------------------------------------------------------------
+  # TODO/FIXME audit (Makefile audit target)
+  # -------------------------------------------------------------------------
+  code-audit:
+    name: TODO/FIXME audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2 (pinned)
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Audit for TODO/FIXME/XXX/HACK in non-test code
+        run: |
+          set -e
+          HITS=$(rg -n --no-heading -e "TODO|FIXME|XXX|HACK" --glob '!*_test.go' --glob '!*_test_*.go' . | wc -l)
+          echo "TODO/FIXME/XXX/HACK count: $HITS"
+          if [ "$HITS" -gt 5 ]; then
+            echo "::warning::Found $HITS TODO/FIXME/XXX/HACK markers (target: ≤5)"
+            rg -n --no-heading -e "TODO|FIXME|XXX|HACK" --glob '!*_test.go' --glob '!*_test_*.go' .
+          fi

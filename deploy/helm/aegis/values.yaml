@@ -1,0 +1,60 @@
+# Default values for aegis.
+# All defaults are intentionally free / open-source.
+replicaCount: 2
+
+image:
+  repository: ghcr.io/ahmedimran35/aegis-waf
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+# Free, AI-free defaults — see config.yaml.example for full key list.
+# Operators override via --set or a custom values.yaml.
+config:
+  threat_feed:
+    enabled: true
+    auto_block: false
+  ws_guard:
+    enabled: true
+    max_message_bytes: 65536
+    max_messages_per_min: 600
+    max_connections_per_ip: 5
+  crs_update:
+    enabled: true
+    interval: 24h
+    github_ref: main
+  anomaly_stats:
+    enabled: true
+    entropy_threshold: 4.5
+    request_rate_zscore: 4.0
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  ingressNamespaceSelector: {}
+
+# Prometheus operator ServiceMonitor (free, optional).
+serviceMonitor:
+  enabled: false
+  interval: 30s
