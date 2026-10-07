@@ -61,8 +61,8 @@ Most WAFs either cost money (Cloudflare Pro, Imperva, F5) or require you to glue
 
 ```bash
 # 1. Clone
-git clone https://github.com/ahmedimran35/Aegis-Waf.git
-cd Aegis-Waf
+git clone https://github.com/ahmedimran35/Aegis.git
+cd Aegis
 
 # 2. Configure
 cp config.yaml.example config.yaml
@@ -437,8 +437,8 @@ Aegis is designed to be safe-by-default:
 
 ```bash
 # Fork, then:
-git clone https://github.com/YOUR/Aegis-Waf.git
-cd Aegis-Waf
+git clone https://github.com/YOUR/Aegis.git
+cd Aegis
 git checkout -b feature/my-change
 
 go test ./...
